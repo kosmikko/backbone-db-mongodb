@@ -28,7 +28,6 @@ _.extend(MongoDB.prototype, Db.prototype, {
     var skip = options.skip || 0;
     var limit = options.limit || this.limit || 50;
     this._getCollection(model, options, function(err, collection) {
-      console.log(err, collection);
       if(err) return callback(err);
       collection.find(query).skip(skip).limit(limit).exec().toArray(callback);
     });
