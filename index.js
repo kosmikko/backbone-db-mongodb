@@ -6,7 +6,18 @@ var _ = require('underscore')
 function MongoDB (client) {
   if(!client) throw new Error('Db.MongoDB requires a connected mongo client');
   this.client = client;
-};
+}
+
+function convertSort(sortProp) {
+  var sortOrder = 1;
+  if(sortProp && sortProp[0] === "-") {
+    sortOrder = -1;
+    sortProp = sortProp.substr(1);
+  }
+  var ret = {};
+  ret[sortProp] = sortOrder;
+  return ret;
+}
 
 MongoDB.sync = Db.sync;
 _.extend(MongoDB.prototype, Db.prototype, {
@@ -24,19 +35,25 @@ _.extend(MongoDB.prototype, Db.prototype, {
 
   findAll: function(model, options, callback) {
     options = options || {};
-    var query = options.query || {};
-    var skip = options.skip || 0;
+    var query = options.where || {};
+    var offset = options.offset || 0;
     var limit = options.limit || this.limit || 50;
-    debug('findAll', query);
+    var sort = options.sort ? convertSort(options.sort) : {$natural: 1};
+    debug('findAll', query, 'limit:', limit, 'offset:', offset, 'sort:', sort);
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);
-      collection.find(query).skip(skip).limit(limit).toArray(callback);
+      collection
+        .find(query)
+        .sort(sort)
+        .skip(offset)
+        .limit(limit)
+        .toArray(callback);
     });
   },
 
   find: function(model, options, callback) {
     options = options || {};
-    var query = options.query || {_id:model.get(model.idAttribute)};
+    var query = options.where || {_id:model.get(model.idAttribute)};
     debug('find', query);
     this._getCollection(model, options, function(err, col) {
       if(err) return callback(err);
