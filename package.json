@@ -17,9 +17,9 @@
   "license": "MIT",
   "dependencies": {
     "underscore": "~1.4.4",
-    "backbone": "~1.0.0",
-    "backbone-promises": "~0.1.0",
-    "backbone-db": "0.0.1",
+    "backbone": "~1.1.0",
+    "backbone-db": "~0.2.0",
+    "backbone-promises": "~0.1.6",
     "debug": "~0.7.2"
   },
   "devDependencies": {
