@@ -85,6 +85,18 @@ _.extend(MongoDB.prototype, Db.prototype, {
       if(err) return callback(err);
       collection.save(model.toJSON(), callback);
     });
+  },
+
+  destroy: function(model, options, callback) {
+    var self = this;
+    debug("destroy: " + model.id);
+    if (model.isNew()) {
+      return false;
+    }
+    this._getCollection(model, options, function(err, collection) {
+      if(err) return callback(err);
+      collection.remove({_id: model.id}, callback);
+    });
   }
 });
 

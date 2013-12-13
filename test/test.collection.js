@@ -6,6 +6,7 @@ var MyCollection = setup.MyCollection;
 describe('Collection tests', function() {
   var collection;
   var model;
+  var testId;
 
   before(function(done) {
     setup.setupDb(done);
@@ -46,18 +47,22 @@ describe('Collection tests', function() {
   });
 
   it('should remove model from collection', function(done) {
-    var testId = model.id;
+    testId = model.id;
     model
       .destroy()
       .then(function() {
-        var a = new MyCollection();
-        a.fetch().then(function() {
-          var removedModel = a.where({id: testId});
-          assert(removedModel.length === 0);
-          done();
-      }).otherwise(done);
+        done();
     }).otherwise(done);
   });
 
-
+  it('should check that model was removed', function(done) {
+    collection = new MyCollection();
+    collection
+      .fetch()
+      .then(function() {
+        var removedModel = collection.where({id: testId});
+        assert(removedModel.length === 0);
+        done();
+      }).otherwise(done);
+  });
 });
