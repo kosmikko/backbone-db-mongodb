@@ -17,25 +17,27 @@ _.extend(MongoDB.prototype, Db.prototype, {
       this.client.collection(model.mongo_collection, callback);
     } else if(model && model.model && model.model.mongo_collection) {
       this.client.collection(model.model.mongo_collection, callback);
+    } else {
+      throw new Error('Cannot get collection for ' + model.type);
     }
   },
 
   findAll: function(model, options, callback) {
-    debug('findAll');
     options = options || {};
     var query = options.query || {};
     var skip = options.skip || 0;
     var limit = options.limit || this.limit || 50;
+    debug('findAll', query);
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);
-      collection.find(query).skip(skip).limit(limit).exec().toArray(callback);
+      collection.find(query).skip(skip).limit(limit).toArray(callback);
     });
   },
 
   find: function(model, options, callback) {
-    debug('find');
     options = options || {};
     var query = options.query || {_id:model.get(model.idAttribute)};
+    debug('find', query);
     this._getCollection(model, options, function(err, col) {
       if(err) return callback(err);
       col.findOne(query, callback);
