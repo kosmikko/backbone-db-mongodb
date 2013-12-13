@@ -39,6 +39,15 @@ _.extend(MongoDB.prototype, Db.prototype, {
     var offset = options.offset || 0;
     var limit = options.limit || this.limit || 50;
     var sort = options.sort ? convertSort(options.sort) : {$natural: 1};
+    if(options.after_id) {
+      query._id = {
+        $gt: options.after_id
+      };
+    } else if(options.before_id) {
+      query._id = {
+        $lt: options.before_id
+      };
+    }
     debug('findAll', query, 'limit:', limit, 'offset:', offset, 'sort:', sort);
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);

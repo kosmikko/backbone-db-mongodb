@@ -21,6 +21,7 @@ var inDescendingOrder = function(arr) {
 describe('Query tests', function() {
   var testModel;
   var collection;
+  var testId;
 
   before(function(done) {
     setup.setupDb(function() {
@@ -33,6 +34,15 @@ describe('Query tests', function() {
     setup.clearDb(function(err) {
       done(err);
     });
+  });
+
+  it('should fetch all models', function(done) {
+    collection
+      .fetch()
+      .then(function() {
+        assert(collection.length === 4);
+        done();
+      }).otherwise(done);
   });
 
   it('should fetch matching models filtered with where operator', function(done) {
@@ -115,15 +125,66 @@ describe('Query tests', function() {
       }).otherwise(done);
   });
 
-  it('should fetch models with after_id', function(done) {
-    //TODO
+  it('should fetch collections first page sorted ascending', function(done) {
     var opts = {
-      after_id: 2,
-      sort: 'value'
+      sort: 'value',
+      limit: 2
     };
     collection
       .fetch(opts)
       .then(function() {
+        var values = collection.pluck('value');
+        assert(values[0] === 1);
+        assert(values[1] === 2);
+        testId = collection.at(collection.length - 1).id;
+        done();
+      }).otherwise(done);
+  });
+
+  it('should page through models with after_id', function(done) {
+    var opts = {
+      sort: 'value',
+      limit: 2,
+      after_id: testId
+    };
+    collection
+      .fetch(opts)
+      .then(function() {
+        var values = collection.pluck('value');
+        assert(values[0] === 2);
+        assert(values[1] === 3);
+        done();
+      }).otherwise(done);
+  });
+
+  it('should fetch collections first page sorted descending', function(done) {
+    var opts = {
+      sort: '-value',
+      limit: 2
+    };
+    collection
+      .fetch(opts)
+      .then(function() {
+        var values = collection.pluck('value');
+        assert(values[0] === 3);
+        assert(values[1] === 2);
+        testId = collection.at(0).id;
+        done();
+      }).otherwise(done);
+  });
+
+  it('should page through models with before_id', function(done) {
+    var opts = {
+      sort: '-value',
+      limit: 2,
+      before_id: testId
+    };
+    collection
+      .fetch(opts)
+      .then(function() {
+        var values = collection.pluck('value');
+        assert(values[0] === 2);
+        assert(values[1] === 1);
         done();
       }).otherwise(done);
   });
