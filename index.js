@@ -1,8 +1,7 @@
 var _ = require('underscore')
   , Db = require('backbone-db')
-  , debug = require('debug')('backbone-db-mongodb');
-
-
+  , debug = require('debug')('backbone-db-mongodb')
+  , ObjectId = require('mongodb').BSONPure.ObjectID;
 
 function MongoDB (client) {
   if(!client) throw new Error('Db.MongoDB requires a connected mongo client');
@@ -20,9 +19,9 @@ _.extend(MongoDB.prototype, Db.prototype, {
       this.client.collection(model.model.mongo_collection, callback);
     }
   },
+
   findAll: function(model, options, callback) {
     debug('findAll');
-    debug("lol");
     options = options || {};
     var query = options.query || {};
     var skip = options.skip || 0;
@@ -32,6 +31,7 @@ _.extend(MongoDB.prototype, Db.prototype, {
       collection.find(query).skip(skip).limit(limit).exec().toArray(callback);
     });
   },
+
   find: function(model, options, callback) {
     debug('find');
     options = options || {};
@@ -41,27 +41,38 @@ _.extend(MongoDB.prototype, Db.prototype, {
       col.findOne(query, callback);
     });
   },
+
   create: function(model, options, callback) {
     var self = this;
     var key = this._getCollection(model, options);
 
-    debug('Create '+key);
-    if (model.isNew() && model.createId) {
-      model.createId(function(err, id) {
-        if(err) {
-          return callback(err);
-        }
-        model.set(model.idAttribute, id);
-        model.set('_id', id);
+    debug('create: ' + key);
+    if (model.isNew()) {
+      this.createId(model, options, function(err) {
+        if(err) callback(err);
         self.update(model, options, callback);
       });
     } else {
       self.update(model, options, callback);
     }
   },
+
+  createId: function(model, options, callback) {
+    var createIdFn = model.createId ? model.createId : this._createDefaultId;
+    createIdFn(function(err, id) {
+      model.set(model.idAttribute, id);
+      model.set('_id', id);
+      callback(err);
+    });
+  },
+
+  _createDefaultId: function(callback) {
+    callback(null, new ObjectId());
+  },
+
   update: function(model, options, callback) {
     var self = this;
-    debug('update:');
+    debug('update:' + model.id);
     if(model.isNew()) {
       return this.create(model, options, callback);
     }
