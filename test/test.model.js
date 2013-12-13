@@ -1,36 +1,17 @@
 var assert = require('assert');
-var _ = require('underscore');
-var MongoDB = require('../');
-var Backbone = require('backbone');
-var Model = require('backbone-promises').Model;
-var format = require('util').format;
-var MongoClient =  require('mongodb').MongoClient;
+var setup = require('./setup');
+var MyModel = setup.MyModel;
 
 describe('MongoDB', function() {
-  var type = 'mymodels';
-  var db;
-  var MyModel = Model.extend({
-    type: type,
-    mongo_collection: type
-  });
   var id;
+  var model;
 
-  before(function(next) {
-    MongoClient.connect('mongodb://localhost:30002/backbone-db-tests', {}, function(err, database) {
-      if(err) {
-        console.error('Start mongoDB or tune settings in test.model.js', err);
-        process.exit();
-      }
-      db = database;
-      var store = new MongoDB(db);
-      MyModel.prototype.db = store;
-      MyModel.prototype.sync = MongoDB.sync;
-      next();
-    });
+  before(function(done) {
+    setup.setupDb(done);
   });
 
   after(function(done) {
-    db.collection(type).remove(done);
+    setup.clearDb(done);
   });
 
   describe('#Model', function() {
@@ -63,11 +44,30 @@ describe('MongoDB', function() {
     });
 
     it('should fetch saved model', function(done) {
-      var m = new MyModel({id: id});
-      m
+      model = new MyModel({id: id});
+      model
         .fetch()
         .then(function() {
-          assert.equal(m.get('data'),'foo');
+          assert.equal(model.get('data'),'foo');
+          done();
+        }, assert).otherwise(done);
+    });
+
+    it('should update model', function(done) {
+      model.set('data', 'new');
+      model
+        .save()
+        .then(function(m) {
+          done();
+        }).otherwise(done);
+    });
+
+    it('should fetch updated model', function(done) {
+      model = new MyModel({id: id});
+      model
+        .fetch()
+        .then(function() {
+          assert.equal(model.get('data'),'new');
           done();
         }, assert).otherwise(done);
     });
