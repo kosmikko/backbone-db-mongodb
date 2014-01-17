@@ -107,6 +107,9 @@ _.extend(MongoDB.prototype, Db.prototype, {
     if(!model.has('_id') && model.has(model.idAttribute)) {
       model.set('_id', model.get(model.idAttribute));
     }
+    if(options.inc) {
+      return this.inc(model, options, callback);
+    }
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);
       collection.save(model.toJSON(), callback);
@@ -122,6 +125,26 @@ _.extend(MongoDB.prototype, Db.prototype, {
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);
       collection.remove({_id: model.id}, callback);
+    });
+  },
+
+  inc: function(model, options, callback) {
+    if(!options || !options.inc || !options.inc.attribute) {
+      throw new Error('inc settings must be defined');
+    }
+    var attribute = options.inc.attribute;
+    var amount = options.inc.amount || 1;
+    var inc = {};
+    inc[attribute] = amount;
+    debug('inc:' + JSON.stringify(inc));
+    this._getCollection(model, options, function(err, col) {
+      if(err) return callback(err);
+      col.update(
+        {_id: model.id},
+        {$inc: inc},
+        {upsert: options.upsert || false},
+        callback
+      );
     });
   }
 });

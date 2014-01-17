@@ -18,7 +18,8 @@ describe('MongoDB', function() {
     it('should .save model with given id', function(done) {
       var m = new MyModel({
         id: 1,
-        asd: 'das'
+        asd: 'das',
+        counter: 2
       });
       m.save().then(function() {
         done();
@@ -31,12 +32,13 @@ describe('MongoDB', function() {
         .fetch()
         .then(function() {
           assert.equal(m2.get('asd'),'das');
+          assert.equal(m2.get('counter'), 2);
           done();
         }, assert).otherwise(done);
     });
 
     it('should .save model without id', function(done) {
-      var m = new MyModel({data: 'foo'});
+      var m = new MyModel({data: 'foo', counter: 5});
       m.save().then(function(m) {
         id = m.get('id');
         done();
@@ -49,6 +51,7 @@ describe('MongoDB', function() {
         .fetch()
         .then(function() {
           assert.equal(model.get('data'),'foo');
+          assert.equal(model.get('counter'), 5);
           done();
         }, assert).otherwise(done);
     });
@@ -67,6 +70,31 @@ describe('MongoDB', function() {
       model
         .fetch()
         .then(function() {
+          assert.equal(model.get('data'),'new');
+          done();
+        }, assert).otherwise(done);
+    });
+
+    it('should inc model attribute', function(done) {
+      model = new MyModel({id: id});
+      model
+        .save(null, {
+          inc: {
+            attribute: 'counter',
+            amount: 1
+          }
+        })
+        .then(function(m) {
+          done();
+        }).otherwise(done);
+    });
+
+    it('should check that attribute was increased', function(done) {
+      model = new MyModel({id: id});
+      model
+        .fetch()
+        .then(function() {
+          assert.equal(model.get('counter'), 6);
           assert.equal(model.get('data'),'new');
           done();
         }, assert).otherwise(done);
