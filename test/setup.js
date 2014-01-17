@@ -26,7 +26,9 @@ var MyCollection = exports.MyCollection = Collection.extend({
 
 exports.setupDb = function(cb) {
   if(db) return cb(null, db);
-  MongoClient.connect("mongodb://localhost:30002/backbone-db-tests", {}, function(err, database) {
+  var mongoPort = process.env.MONGO_PORT || '30002';
+  var url = format("mongodb://localhost:%s/backbone-db-tests", mongoPort);
+  MongoClient.connect(url, {}, function(err, database) {
     if(err) {
       console.error("Start mongoDB or tune settings in test.model.js", err);
       cb(err);
