@@ -1,35 +1,68 @@
 var assert = require('assert');
-var _ = require('underscore');
-var MongoDB = require('../');
-var Backbone = require('backbone');
-var Promises = require('backbone-promises');
-var Model = Promises.Model;
-var Collection = Promises.Collection;
-var format = require('util').format;
-var MongoClient =  require('mongodb').MongoClient;
+var setup = require('./setup');
+var MyModel = setup.MyModel;
+var MyCollection = setup.MyCollection;
 
+describe('Collection tests', function() {
+  var collection;
+  var model;
+  var testId;
 
-describe('MongoDB', function() {
-  var db, MyModel;
-  before(function(next) {
-    MongoClient.connect("mongodb://localhost:30002/backbone-db-tests_?", {}, function(err, database) {
-      if(err) {
-        console.error("Start mongoDB or tune settings in test.model.js", err);
-        process.exit();
-      }
-      db = database;
-      var store = new MongoDB(db);
-      MyModel = Model.extend({
-        db: store,
-        sync: MongoDB.sync,
-        mongo_collection: 'mymodels'
-      });
-      next();
-    });
+  before(function(done) {
+    setup.setupDb(done);
   });
-  describe('#Collection', function() {
-    it('should .save from store', function(t) {
-      t();
-    });
+
+  after(function(done) {
+    setup.clearDb(done);
+  });
+
+  it('should .create a model', function(done) {
+     collection = new MyCollection();
+     collection
+      .create({'id_check': 1}, { wait: true })
+      .then(function(m) {
+        assert(m.get('id_check') === collection.at(0).get('id_check'));
+        model = m;
+        done();
+      }).otherwise(done);
+  });
+
+  it('should fetch created model', function(done) {
+    var m2 = new MyModel({id: model.id});
+    m2.fetch().then(function(m) {
+      assert(m.get('id_check') === m2.get('id_check'));
+      done();
+    }).otherwise(done);
+  });
+
+  it('should fetch collection models', function(done) {
+    collection = new MyCollection();
+    collection
+      .fetch()
+      .then(function(c) {
+        assert(collection.length === 1);
+        assert(c.at(0));
+        done();
+      }).otherwise(done);
+  });
+
+  it('should remove model from collection', function(done) {
+    testId = model.id;
+    model
+      .destroy()
+      .then(function() {
+        done();
+    }).otherwise(done);
+  });
+
+  it('should check that model was removed', function(done) {
+    collection = new MyCollection();
+    collection
+      .fetch()
+      .then(function() {
+        var removedModel = collection.where({id: testId});
+        assert(removedModel.length === 0);
+        done();
+      }).otherwise(done);
   });
 });
