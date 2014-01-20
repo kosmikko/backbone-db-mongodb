@@ -7,7 +7,7 @@ var store = new MongoDB(mongoClient);
 
 var MyModel = Model.extend({
   db: store,
-  sync: RedisDb.sync,
+  sync: store.sync,
   mongo_collection: 'mymodels'
 });
 
