@@ -124,7 +124,9 @@ _.extend(MongoDB.prototype, Db.prototype, {
     }
     this._getCollection(model, options, function(err, collection) {
       if(err) return callback(err);
-      collection.remove({_id: model.id}, callback);
+      collection.remove({_id: model.id}, function(err, res) {
+        callback(err, res || options.ignoreFailures ? 1 : res);
+      });
     });
   },
 
